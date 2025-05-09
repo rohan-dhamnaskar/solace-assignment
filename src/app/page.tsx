@@ -7,31 +7,52 @@ export default function Home(): JSX.Element {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
   const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-
   useEffect(() => {
     console.log("fetching advocates...");
     fetch("/api/advocates").then((response) => {
       response.json().then((jsonResponse) => {
+        console.log(jsonResponse);
         setAdvocates(jsonResponse.data);
         setFilteredAdvocates(jsonResponse.data);
       });
     });
+
   }, []);
 
   const onChange = (element: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = element.target.value;
     setSearchTerm(searchTerm);
 
+    // empty search term fix
+    if (!searchTerm) {
+      setFilteredAdvocates(advocates);
+      return;
+    }
+
+    console.log(advocates);
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const isNumeric = /^\d+$/.test(searchTerm);
+
     console.log("filtering advocates...");
+
     const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
+      const stringMatch =
+        advocate.firstName.toLowerCase().includes(searchTermLower) ||
+        advocate.lastName.toLowerCase().includes(searchTermLower) ||
+        advocate.city.toLowerCase().includes(searchTermLower) ||
+        advocate.degree.toLowerCase().includes(searchTermLower) ||
+        advocate.specialties.some(specialty =>
+          specialty.toLowerCase().includes(searchTermLower)
+        );
+
+      // Number-based searches
+      const numberMatch = isNumeric && (
+        advocate.yearsOfExperience.toString() === searchTerm ||
+        advocate.phoneNumber.toString().includes(searchTerm)
       );
+
+      return stringMatch || numberMatch;
     });
 
     setFilteredAdvocates(filteredAdvocates);
@@ -70,21 +91,21 @@ export default function Home(): JSX.Element {
                 placeholder="Search by any field..."
                 aria-label="Search advocates"
               />
-              {searchTerm && (
-                <p
-                  id="search-term-display"
-                  className="mt-1 text-sm text-gray-500"
-                >
-                  Searching for:{" "}
-                  <span className="font-medium">{searchTerm}</span>
-                </p>
-              )}
             </div>
           </div>
           <button id="reset-search" onClick={onClick} className="btn-primary">
             Reset Search
           </button>
         </div>
+        {searchTerm && (
+          <p
+            id="search-term-display"
+            className="mt-1 text-sm text-gray-500"
+          >
+            Searching for:{" "}
+            <span className="font-medium">{searchTerm}</span>
+          </p>
+        )}
       </div>
 
       <div

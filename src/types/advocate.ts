@@ -4,6 +4,6 @@ export type Advocate = {
     city: string;
     degree: string;
     specialties: string[];
-    yearsOfExperience: string;
-    phoneNumber: string;
+    yearsOfExperience: number;
+    phoneNumber: number;
 };
