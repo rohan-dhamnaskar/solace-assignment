@@ -1,32 +1,36 @@
 "use client";
 
-import { JSX, useEffect, useState } from "react";
-import { Advocate } from "@/types/advocate";
+import { JSX, useState, useMemo, useCallback } from "react";
+import { useAdvocates } from "@/hooks/useAdvocates";
+import { useDebounce } from "@/hooks/useDebounce";
 import "./globals.css";
-import {useAdvocates} from "@/hooks/useAdvocates";
 
 export default function Home(): JSX.Element {
-  const { advocates, filteredAdvocates, setFilteredAdvocates, isLoading, error } = useAdvocates();
+  const { advocates, setFilteredAdvocates, isLoading, error } = useAdvocates();
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const onChange = (element: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = element.target.value;
-    setSearchTerm(searchTerm);
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
 
-    // empty search term fix
-    if (!searchTerm) {
-      setFilteredAdvocates(advocates);
-      return;
+  const resetSearch = useCallback(() => {
+    setSearchTerm("");
+  }, []);
+
+  const filteredAdvocates = useMemo(() => {
+    if (!debouncedSearchTerm) {
+      return advocates;
     }
 
     console.log(advocates);
 
-    const searchTermLower = searchTerm.toLowerCase();
-    const isNumeric = /^\d+$/.test(searchTerm);
+    const searchTermLower = debouncedSearchTerm.toLowerCase();
+    const isNumeric = /^\d+$/.test(debouncedSearchTerm);
 
     console.log("filtering advocates...");
 
-    const filteredAdvocates = advocates.filter((advocate) => {
+    return advocates.filter((advocate) => {
       const stringMatch =
         advocate.firstName.toLowerCase().includes(searchTermLower) ||
         advocate.lastName.toLowerCase().includes(searchTermLower) ||
@@ -38,15 +42,13 @@ export default function Home(): JSX.Element {
 
       // Number-based searches
       const numberMatch = isNumeric && (
-        advocate.yearsOfExperience.toString() === searchTerm ||
-        advocate.phoneNumber.toString().includes(searchTerm)
+        advocate.yearsOfExperience.toString() === debouncedSearchTerm ||
+        advocate.phoneNumber.toString().includes(debouncedSearchTerm)
       );
 
       return stringMatch || numberMatch;
     });
-
-    setFilteredAdvocates(filteredAdvocates);
-  };
+  }, [advocates, debouncedSearchTerm]);
 
   const onClick = () => {
     setSearchTerm("");
@@ -111,7 +113,7 @@ export default function Home(): JSX.Element {
                 type="text"
                 id="search"
                 value={searchTerm}
-                onChange={onChange}
+                onChange={handleSearch}
                 className="advocate-search-input"
                 placeholder="Search by any field..."
                 aria-label="Search advocates"
