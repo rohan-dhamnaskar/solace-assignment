@@ -53,6 +53,18 @@ export default function Home(): JSX.Element {
     setFilteredAdvocates(advocates);
   };
 
+  // Handle specialty tag clicks
+  const handleSpecialtyClick = (specialty: string) => {
+    setSearchTerm(specialty);
+
+    const searchTermLower = specialty.toLowerCase();
+    const filtered = advocates.filter((advocate) =>
+      advocate.specialties.some(spec => spec.toLowerCase().includes(searchTermLower))
+    );
+
+    setFilteredAdvocates(filtered);
+  };
+
   // hook actions
   if(isLoading) {
     return (
@@ -172,10 +184,12 @@ export default function Home(): JSX.Element {
                     {advocate.specialties.map((specialty, idx) => (
                       <span
                         key={`specialty-${index}-${idx}`}
-                        className="advocate-specialty-tag"
+                        className="advocate-specialty-tag cursor-pointer hover:bg-blue-200"
+                        onClick={() => handleSpecialtyClick(specialty)}
+                        title="Click to search for this specialty"
                       >
-                          {specialty}
-                        </span>
+                        {specialty}
+                      </span>
                     ))}
                   </div>
                 </td>
