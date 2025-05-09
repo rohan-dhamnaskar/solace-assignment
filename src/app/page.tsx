@@ -1,16 +1,7 @@
 "use client";
 
 import { JSX, useEffect, useState } from "react";
-
-interface Advocate {
-  firstName: string;
-  lastName: string;
-  city: string;
-  degree: string;
-  specialties: string[];
-  yearsOfExperience: string;
-  phoneNumber: string;
-}
+import { Advocate } from "@/types/advocate";
 
 export default function Home(): JSX.Element {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
