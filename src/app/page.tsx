@@ -1,91 +1,213 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
+import { Advocate } from "@/types/advocate";
+import "./globals.css";
+import {useAdvocates} from "@/hooks/useAdvocates";
 
-export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+export default function Home(): JSX.Element {
+  const { advocates, filteredAdvocates, setFilteredAdvocates, isLoading, error } = useAdvocates();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-  }, []);
+  const onChange = (element: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = element.target.value;
+    setSearchTerm(searchTerm);
 
-  const onChange = (e) => {
-    const searchTerm = e.target.value;
+    // empty search term fix
+    if (!searchTerm) {
+      setFilteredAdvocates(advocates);
+      return;
+    }
 
-    document.getElementById("search-term").innerHTML = searchTerm;
+    console.log(advocates);
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const isNumeric = /^\d+$/.test(searchTerm);
 
     console.log("filtering advocates...");
+
     const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
+      const stringMatch =
+        advocate.firstName.toLowerCase().includes(searchTermLower) ||
+        advocate.lastName.toLowerCase().includes(searchTermLower) ||
+        advocate.city.toLowerCase().includes(searchTermLower) ||
+        advocate.degree.toLowerCase().includes(searchTermLower) ||
+        advocate.specialties.some(specialty =>
+          specialty.toLowerCase().includes(searchTermLower)
+        );
+
+      // Number-based searches
+      const numberMatch = isNumeric && (
+        advocate.yearsOfExperience.toString() === searchTerm ||
+        advocate.phoneNumber.toString().includes(searchTerm)
       );
+
+      return stringMatch || numberMatch;
     });
 
     setFilteredAdvocates(filteredAdvocates);
   };
 
   const onClick = () => {
-    console.log(advocates);
+    setSearchTerm("");
     setFilteredAdvocates(advocates);
   };
 
+  // hook actions
+  if(isLoading) {
+    return (
+      <main id="advocates-main" className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 id="page-title" className="text-3xl font-bold text-gray-800">
+          Solace Advocates
+        </h1>
+        <p className="text-gray-500 mb-8">Loading...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main id="advocates-main" className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 id="page-title" className="text-3xl font-bold text-gray-800">
+          Solace Advocates
+        </h1>
+        <p className="text-red-500 mb-8">Error: {error.message}</p>
+      </main>
+    );
+  }
+
   return (
-    <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
+    <main id="advocates-main" className="container mx-auto px-4 py-8 max-w-7xl">
+      <h1 id="page-title" className="text-3xl font-bold text-gray-800">
+        Solace Advocates
+      </h1>
+      <p className="text-gray-500 mb-8">
+        Find the right advocate for your needs
+      </p>
+
+      <div id="search-container" className="card mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="flex-grow">
+            <label
+              htmlFor="search"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Search
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                id="search"
+                value={searchTerm}
+                onChange={onChange}
+                className="advocate-search-input"
+                placeholder="Search by any field..."
+                aria-label="Search advocates"
+              />
+            </div>
+          </div>
+          <button id="reset-search" onClick={onClick} className="btn-primary">
+            Reset Search
+          </button>
+        </div>
+        {searchTerm && (
+          <p
+            id="search-term-display"
+            className="mt-1 text-sm text-gray-500"
+          >
+            Searching for:{" "}
+            <span className="font-medium">{searchTerm}</span>
+          </p>
+        )}
       </div>
-      <br />
-      <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
-              <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div>{s}</div>
-                  ))}
+
+      <div
+        id="advocates-table-container"
+        className="overflow-x-auto shadow-md rounded-lg"
+      >
+        <table
+          className="min-w-full divide-y divide-gray-200"
+          aria-label="Advocates list"
+        >
+          <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="advocate-table-header">
+              First Name
+            </th>
+            <th scope="col" className="advocate-table-header">
+              Last Name
+            </th>
+            <th scope="col" className="advocate-table-header">
+              City
+            </th>
+            <th scope="col" className="advocate-table-header">
+              Degree
+            </th>
+            <th scope="col" className="advocate-table-header">
+              Specialties
+            </th>
+            <th scope="col" className="advocate-table-header">
+              Experience
+            </th>
+            <th scope="col" className="advocate-table-header">
+              Phone
+            </th>
+          </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+          {filteredAdvocates.length > 0 ? (
+            filteredAdvocates.map((advocate, index) => (
+              <tr
+                key={`advocate-${advocate.firstName}-${advocate.lastName}`}
+                className="hover:bg-gray-50"
+              >
+                <td className="advocate-table-cell-primary">
+                  {advocate.firstName}
                 </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
+                <td className="advocate-table-cell">{advocate.lastName}</td>
+                <td className="advocate-table-cell">{advocate.city}</td>
+                <td className="advocate-table-cell">{advocate.degree}</td>
+                <td className="advocate-table-cell">
+                  <div className="flex flex-wrap gap-1">
+                    {advocate.specialties.map((specialty, idx) => (
+                      <span
+                        key={`specialty-${index}-${idx}`}
+                        className="advocate-specialty-tag"
+                      >
+                          {specialty}
+                        </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="advocate-table-cell">
+                  {advocate.yearsOfExperience}
+                </td>
+                <td className="advocate-table-cell">
+                  {advocate.phoneNumber}
+                </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))
+          ) : (
+            <tr>
+              <td
+                colSpan={7}
+                className="advocate-table-cell text-center"
+                id="no-results"
+              >
+                No advocates found matching your search criteria.
+              </td>
+            </tr>
+          )}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredAdvocates.length > 0 && (
+        <p id="results-counter" className="mt-3 text-sm text-gray-500">
+          Showing {filteredAdvocates.length}{" "}
+          {filteredAdvocates.length === 1 ? "advocate" : "advocates"}
+        </p>
+      )}
     </main>
   );
 }
