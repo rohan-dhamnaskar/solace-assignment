@@ -2,22 +2,12 @@
 
 import { JSX, useEffect, useState } from "react";
 import { Advocate } from "@/types/advocate";
+import "./globals.css";
+import {useAdvocates} from "@/hooks/useAdvocates";
 
 export default function Home(): JSX.Element {
-  const [advocates, setAdvocates] = useState<Advocate[]>([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
+  const { advocates, filteredAdvocates, setFilteredAdvocates, isLoading, error } = useAdvocates();
   const [searchTerm, setSearchTerm] = useState("");
-  useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        console.log(jsonResponse);
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-
-  }, []);
 
   const onChange = (element: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = element.target.value;
@@ -62,6 +52,29 @@ export default function Home(): JSX.Element {
     setSearchTerm("");
     setFilteredAdvocates(advocates);
   };
+
+  // hook actions
+  if(isLoading) {
+    return (
+      <main id="advocates-main" className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 id="page-title" className="text-3xl font-bold text-gray-800">
+          Solace Advocates
+        </h1>
+        <p className="text-gray-500 mb-8">Loading...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main id="advocates-main" className="container mx-auto px-4 py-8 max-w-7xl">
+        <h1 id="page-title" className="text-3xl font-bold text-gray-800">
+          Solace Advocates
+        </h1>
+        <p className="text-red-500 mb-8">Error: {error.message}</p>
+      </main>
+    );
+  }
 
   return (
     <main id="advocates-main" className="container mx-auto px-4 py-8 max-w-7xl">
