@@ -1,3 +1,37 @@
+/* globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .advocate-card {
+        @apply bg-white shadow-md rounded-lg p-6;
+    }
+    .advocate-table-header {
+        @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    }
+
+    .advocate-table-cell {
+        @apply px-6 py-4 whitespace-nowrap text-sm text-gray-500;
+    }
+
+    .advocate-table-cell-primary {
+        @apply px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900;
+    }
+
+    .advocate-search-input {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    }
+
+    .advocate-specialty-tag {
+        @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800;
+    }
+
+    .btn-primary {
+        @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500;
+    }
+
+    .card {
+        @apply bg-white p-6 rounded-lg shadow-md;
+    }
+}
