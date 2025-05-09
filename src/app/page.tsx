@@ -23,12 +23,8 @@ export default function Home(): JSX.Element {
       return advocates;
     }
 
-    console.log(advocates);
-
     const searchTermLower = debouncedSearchTerm.toLowerCase();
     const isNumeric = /^\d+$/.test(debouncedSearchTerm);
-
-    console.log("filtering advocates...");
 
     return advocates.filter((advocate) => {
       const stringMatch =
